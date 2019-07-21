@@ -37,9 +37,6 @@ db.on("error", function(err) {
   console.log(err);
 });
 
-//model
-let Articles = require("./model/article");
-
 //body parser middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -83,6 +80,8 @@ app.use(
     }
   })
 );
+//model
+let Articles = require("./model/article");
 
 app.get("/", (req, res) => {
   Articles.find({}, function(err, article) {
@@ -95,76 +94,8 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/article/add", (req, res) => {
-  res.render("add_article", { title: "Add Article" });
-});
-
-//get single article
-app.get("/article/:id", (req, res) => {
-  Articles.findById(req.params.id, function(err, article) {
-    res.render("article", { article: article });
-  });
-});
-
-app.post("/article/add", (req, res) => {
-  req.checkBody("title", "title is require").notEmpty();
-  req.checkBody("author", "author is require").notEmpty();
-  req.checkBody("body", "body is require").notEmpty();
-
-  let errors = req.validationErrors();
-
-  if (errors) {
-    res.render("add_article", { title: "Add article", errors: errors });
-  } else {
-    let article = new Articles();
-    article.title = req.body.title;
-    article.author = req.body.author;
-    article.body = req.body.article_body;
-
-    article.save(function(err) {
-      if (err) {
-        console.log(err);
-      } else {
-        req.flash("success", "Article Added");
-        res.redirect("/");
-      }
-    });
-  }
-});
-
-app.get("/article/edit/:id", (req, res) => {
-  Articles.findById(req.params.id, function(err, article) {
-    res.render("edit_article", { title: "Edit Article", article: article });
-  });
-});
-//update article
-app.post("/article/edit/:id", (req, res) => {
-  let article = {};
-  article.title = req.body.title;
-  article.author = req.body.author;
-  article.body = req.body.article_body;
-
-  let query = { _id: req.params.id };
-
-  Articles.updateOne(query, article, function(err) {
-    if (err) {
-      console.log(err);
-    } else {
-      req.flash("success", "Article Updated");
-      res.redirect("/");
-    }
-  });
-});
-app.delete("/article/:id", (req, res) => {
-  let query = { _id: req.params.id };
-  Articles.remove(query, function(err) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.send("Success");
-    }
-  });
-});
+//router files
+app.use("/article", require("./routes/article"));
 
 app.listen(port, () => {
   console.log(`Application is running on ${port}`);
